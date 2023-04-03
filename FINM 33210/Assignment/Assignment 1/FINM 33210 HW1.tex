@@ -1,0 +1,355 @@
+%=======================02-713 LaTeX template, following the 15-210 template==================
+%
+%
+%
+%
+%    1. Update the information in section "A," put your name and the name of 
+%       the class and the number of the problem set
+%    2. Write your answers in section "B" below. Precede answers for all 
+%       parts of a question with the command "\question{n}{desc}" where n is
+%       the question number and "desc" is a short, one-line description of 
+%       the problem. There is no need to restate the problem.
+%    3. If a question has multiple parts, precede the answer to part x with the
+%       command "\part{x}".
+%
+
+\documentclass[11pt]{article}
+\usepackage[mathscr]{euscript}
+
+
+\newcommand\question[2]{\vspace{.25in}\hrule\textbf{#1: #2}\vspace{.5em}\hrule\vspace{.10in}}
+\renewcommand\part[1]{\vspace{.10in}\textbf{(#1)}}
+
+
+% plots
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+
+\usepackage{amsmath, amssymb, amsthm} %AMS packages
+\usepackage{mathtools, graphicx, enumitem} %generally recommended
+\usepackage{mathrsfs} %symbols I like
+\usepackage{hyperref} %personal preference
+\usepackage{microtype, } %recommended by stackexchange, never tried them myself
+\usepackage{nag, todonotes} %workflow stuff, doesn't affect final document
+
+% Layout
+\usepackage{fancyhdr}
+\usepackage[margin=1in]{geometry}
+\lhead{\NAME}
+\chead{\ClassNumber , HW\HWNUM}
+\rhead{Due: \duedate}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt}
+\setlength{\headheight}{13.6pt}
+\pagestyle{fancyplain}
+
+
+%-------------------------------------------<commands>--------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Letter Symbols
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\F}{\mathcal{F}}
+\renewcommand{\H}{\mathcal{H}} %overwrites long-umlaut diacritic
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\Info}{\mathcal{F}}
+\renewcommand{\P}{\mathbb{P}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Brackets
+\newcommand{\paren}[1]{\left( #1 \right)}
+\newcommand{\bracket}[1]{\left[ #1 \right]}
+\newcommand{\chevron}[1]{\langle #1 \rangle}
+\newcommand{\norm}[2][ ]{\left\lVert #2 \right\rVert_{#1}}
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Operators
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\trace}{tr}
+\DeclareMathOperator{\lspan}{span}
+\DeclareMathOperator{\conv}{conv} % stands for conv, as in convex hull
+\DeclareMathOperator{\Int}{int} % stands for int, as in interior of a set
+\DeclareMathOperator{\cl}{cl}
+\DeclareMathOperator{\sgn}{sgn}
+\newcommand{\indep}{\perp \!\!\! \perp}
+\newcommand{\NormCDF}[1]{\Phi \left[ #1 \right]}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Aarows
+\newcommand{\into}{\hookrightarrow}
+\newcommand{\onto}{\twoheadrightarrow}
+\newcommand{\weakly}{\rightharpoonup}
+\newcommand{\isom}{\cong}
+\newcommand{\restr}[1]{{\upharpoonright}_{#1}}
+%\newcommand{\rest}{\big|}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Common Abbreviations
+\renewcommand{\th}{^\mathrm{th}} %overwrites thorn (old english letter)
+\newcommand{\n}{^{-1}}
+\newcommand{\half}{\frac{1}{2}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Differential Operators
+\newcommand{\del}{\partial}
+\newcommand{\grad}{\nabla}
+\newcommand{\Laplace}{\Delta}
+\renewcommand{\div}{\operatorname{div}} %overwrites division symbol
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\intd}{\,\dd}
+\newcommand{\ddt}{\frac{\dd}{\dd t}}
+\newcommand{\deriv}[2]{\frac{\dd #1}{\dd #2}} %can leave top blank, e.g. \deriv{}{x}
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}} %ditto
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%											Favorite Functions and Space Names
+\newcommand{\test}{\mathcal{D}}
+\newcommand{\Ctest}{C_c^\infty}
+\newcommand{\BMO}{\operatorname{BMO}}
+\newcommand{\indic}[1]{\chi_{\{#1\}}}
+\newcommand{\Leb}[2][\R^n]{L^{#2}(#1)}
+%-------------------------------------------</commands>--------------------------------------------------------
+
+
+\begin{document}\raggedright
+
+
+%Section A==============Change the values below to match your information==================
+\newcommand\NAME{Ki Hyun}  % your name
+\newcommand\ClassNumber{FINM 33210}
+\newcommand\ClassName{Bayesian Statistical Inference and Machine Learning}    
+\newcommand\HWNUM{1}              % the homework number
+\newcommand\duedate{23:59 (CT) Mar 31st 2023}	% due date
+%Section B==============Put your answers to the questions below here=======================
+
+\title{Homework \HWNUM}
+\author{\NAME \\ 
+\ClassNumber \text{:} \ClassName}
+\date{Due: \duedate}
+
+\maketitle
+
+%\question{1}{Description of problem}
+%\part{a}
+
+\question{1}{Property C5}
+
+Let $U$ be the probability space.
+
+The five given axioms are:
+
+\begin{equation} \tag{C0}
+\P\{\phi\} = 0
+\end{equation}
+
+\begin{equation} \tag{C1}
+\text{If } A_1 \cap A_2 = \phi
+\text{, then }
+\P\{A_1 \cup A_2\} = \P\{A_1\} + \P\{A_2\}
+\end{equation}
+
+\begin{equation} \tag{C2}
+\P\{A^c\} = 1 - \P\{A\}
+\end{equation}
+
+\begin{equation} \tag{C3}
+0 \leq \P\{A\} \leq 1
+\end{equation}
+
+\begin{equation} \tag{C4}
+\text{If } A \subset B
+\text{, then }
+\P\{B\} = \P\{A\} + \P\{B \backslash A\} \geq \P\{A\}
+\end{equation}
+
+We want to show:
+
+\begin{equation} \tag{C5}
+\P\{A \cup B\} = \P\{A\} + \P\{B\} - \P\{A \cap B\}
+\end{equation}
+
+First we know from the definition of $\backslash$:
+
+\begin{equation} \tag{1}
+A \cap (B \backslash A) = \phi
+\end{equation}
+
+However, we also know that:
+
+\begin{equation} \tag{2}
+A \cup (B \backslash A) = A \cup B
+\end{equation}
+
+Therefore, from (1), (2) and (C1):
+
+$$
+\begin{aligned}
+\P\{A \cup B\} &= \P\{A \cup (B \backslash A)\} \\
+&= \P\{A\} + \P\{B \backslash A\}
+\end{aligned}
+$$
+
+Here, we know by definition that $(A \cap B) \subset A$ and
+therefore from (1):
+
+\begin{equation} \tag{3}
+(B \backslash A) \cap (A \cap B) = \phi 
+\end{equation}
+
+Also, by definition, 
+
+\begin{equation} \tag{4}
+(B \backslash A) \cup (A \cap B) = B
+\end{equation}
+
+Therefore, from (3), (4) and (C1):
+
+\begin{equation} \tag{5}
+\P\{B\} = \P\{(B \backslash A) \cup (A \cap B)\}
+= \P\{B \backslash A\} + \P\{A \cap B\}
+\end{equation}
+
+Moreover,
+
+$$
+\begin{aligned}
+\P\{A \cup B\} &= \P\{A \cup (B \backslash A)\} \\
+&= \P\{A\} + \P\{B \backslash A\} \\
+&= \P\{A\} + \P\{B\} - \P\{A \cap B\} \\
+&(\because (5))
+\end{aligned}
+$$
+
+$$
+Q.E.D.
+$$
+
+\newpage
+
+\question{2}{Univariate Linear Regression}
+
+\part{a}
+
+Let $\mathbf{X}$ be the $n \times 2$ matrix representing each
+data (including the constant) such that 
+
+$$
+\mathbf{X} = \left[
+\begin{matrix}
+1 & x_1 \\
+\vdots & \vdots \\
+1 & x_n 
+\end{matrix}
+\right]
+$$
+
+Similarly, let $\vec{y}$ be the vector of the observed endogenous
+variable such that
+
+$$
+\vec{y} = \left(
+\begin{matrix}
+y_1 \\
+\vdots\\
+y_n 
+\end{matrix}
+\right)
+$$
+
+Since it was given that 
+
+$$
+y_i - \theta_0 - \theta_1 x_i = \epsilon \sim N(0, s^2)
+$$
+
+From the notation above, assuming that the data are i.i.d.,
+
+$$
+\vec{y} \sim MVN(X \mathbf{\theta}, s^2 \mathbf{I})
+$$
+
+Since this is a special case of the multivariate normal distribution
+where the correlation between the entries in $\vec{y}$ are independent
+the probability density function can be written as:
+
+$$
+p(\vec{y} \mid \mathbf{\theta}) =
+\frac{e^{-\frac{1}{2} 
+\frac{\lVert \vec{y} - \mathbf{X\mathbf{\theta}}\rVert^2}
+{s^2}}}{(2 \pi s^2)^{\frac{n}{2}}}
+$$
+
+\part{b}
+
+$$
+\begin{aligned}
+p(\theta \mid \vec{y}) \propto& \ p(\vec{y} \mid \theta)p(\theta)\\
+\propto&\ \frac{\exp(-\frac{1}{2}||\vec{y}-X\theta||^2/s^2)}{(2\pi s^2)^\frac{n}{2}}
+\cdot
+\frac{\exp\Biggl(-\frac{1}{2}\Biggl[\frac{(\theta_0-\mu_0)^2}{\sigma_0^2} + \frac{(\theta_1-\mu_1)^2}{\sigma_1^2}\Biggr]\Biggr)}{2\pi \sigma_0 \sigma_1}\\
+\propto& \exp(-\frac{1}{2}||\vec{y}-X\theta||^2/s^2)
+\cdot
+\exp\Biggl(-\frac{1}{2}\Biggl[\frac{(\theta_0-\mu_0)^2}{\sigma_0^2} + \frac{(\theta_1-\mu_1)^2}{\sigma_1^2}\Biggr]\Biggr)\\
+\propto&\ \exp\Biggl(-\frac{1}{2}\frac{\sum_{i=1}^{n}(y_i-\theta_o-\theta_1x_i)^2}{s^2}\Biggr)
+\cdot
+\exp\Biggl(-\frac{1}{2}\Biggl[\frac{(\theta_0-\mu_0)^2}{\sigma_0^2} + \frac{(\theta_1-\mu_1)^2}{\sigma_1^2}\Biggr]\Biggr)\\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\propto&\ \exp\Biggl(-\frac{1}{2} \left\{
+\frac{\sum_{i=1}^{n} -2\theta_0y_i - 2\theta_1x_iy_i+\theta_0^2+2\theta_0\theta_1x_i+\theta_1^2x_i^2}{s^2}
++\Biggl[\frac{\theta_0^2-2\mu_0\theta_0}{\sigma_0^2} + \frac{\theta_1^2-2\mu_1\theta_1}{\sigma_1^2}\Biggr]
+\right\}
+\Biggr)\\
+\propto&\ \exp(-\frac{1}{2} \{
+\theta_0^2\Biggl[\frac{1}{\sigma^2_0}+\frac{n}{s^2}\Biggr] - 2\theta_0\Biggl[\frac{\sum_{i=1}^{n}y_i}{s^2} + \frac{\mu_0}{\sigma_0^2}\Biggr]
++ \theta_1^2\Biggl[\frac{\sum_{i=1}^{n}x_i}{s^2} + \frac{1}{\sigma_1^2}\Biggr] \\ 
+\ & \ - 2\theta_1\Biggl[\frac{\sum_{i=1}^{n}y_ix_i}{s^2} + \frac{\mu_i}{\sigma_1^2}\Biggr]
++ 2\theta_0\theta_1\frac{\sum_{i=1}^{n}x_i}{s^2}
+\}
+)\\
+\propto&\ \exp\Biggl(-\frac{1}{2} \left\{
+\Biggl[\frac{1}{\sigma_0^2}+\frac{n}{s^2}\Biggr]
+\Biggl[\theta_0-
+\frac{\frac{\sum_{i=1}^n y_i}{s^2} + \frac{\mu_0}{\sigma_0^2}}{\frac{1}{\sigma_0^2}+\frac{n}{s^2}}\Biggr]^2
++
+\Biggl[\frac{\sum_{i=1}^n x_i^2}{s^2}+\frac{1}{\sigma_1^2}\Biggr]
+\Biggl[\theta_0-
+\frac{\frac{\sum_{i=1}^n x_iy_i}{s^2} + \frac{\mu_1}{\sigma_1^2}}{\frac{x_i^2}{s^2}+\frac{1}{\sigma_1^2}}\Biggr]^2 + C
+\right\}\Biggr)\\
+\end{aligned}
+$$
+
+Therefore, in proportional form:
+
+$$
+\begin{aligned}
+p(\theta \mid \vec{y}) \propto&\  exp\Biggl(-\frac{1}{2} \left\{\frac{(\theta_0-\tilde{\mu}_0)^2}{\tilde{\sigma}_0^2}
++
+\frac{(\theta_1-\tilde{\mu}_1)^2}{\tilde{\sigma}_1^2}
+\right\} + C\Biggr)\\
+\end{aligned}
+$$
+
+Here, the posterior parameters are:
+
+$$
+\begin{aligned}
+\tilde{\mu}_0 &= \frac{\frac{\sum_{i=1}^n y_i}{s^2} + \frac{\mu_0}{\sigma_0^2}}{\frac{1}{\sigma_0^2}+\frac{n}{s^2}} \\
+\tilde{\sigma}_0^2 &= \frac{1}{\frac{1}{\sigma_0^2}+\frac{n}{s^2}} \\
+\tilde{\mu}_1 &= \frac{\frac{\sum_{i=1}^n x_iy_i}{s^2} + \frac{\mu_1}{\sigma_1^2}}{\frac{x_i^2}{s^2}+\frac{1}{\sigma_1^2}} \\
+\tilde{\sigma}_1^2 &= \frac{1}{\frac{x_i^2}{s^2}+\frac{1}{\sigma_1^2}}\\
+\tilde{\rho} =& \frac{\frac{\sum_{i=1}^n x_iy_i}{s^2} - \frac{\frac{\sum_{i=1}^n y_i}{s^2} + \frac{\mu_0}{\sigma_0^2}}{\frac{1}{\sigma_0^2}+\frac{n}{s^2}} \cdot \frac{\frac{\sum_{i=1}^n x_i^2}{s^2} + \frac{1}{\sigma_1^2}}{\frac{\sum_{i=1}^n x_i^2}{s^2}+\frac{1}{\sigma_1^2}}}{\sqrt{\frac{1}{\frac{1}{\sigma_0^2}+\frac{n}{s^2}} \cdot \frac{1}{\frac{\sum_{i=1}^n x_i^2}{s^2}+\frac{1}{\sigma_1^2}}}}
+\end{aligned}
+$$
+
+\part{c}
+
+The posterior distribution also follows a normal distribution.
+
+Since the normal distribution was a prior, this prior would be
+a conjugate prior for this likelihood.
+
+\end{document}
+
+$$
+\begin{aligned}
+\end{aligned}
+$$
