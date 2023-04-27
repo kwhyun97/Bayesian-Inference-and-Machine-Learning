@@ -1,0 +1,148 @@
+---
+title: "Homework 2"
+subtitle: "FINM 33210: Bayesian Statistical Inference and Machine Learning"
+author: "Ki Hyun"
+date: "Due: 23:59 (CT) April 29th 2023"
+output: html_notebook
+---
+
+```{r packages, message=FALSE}
+library(dplyr)
+library(purrr)
+library(glmnet)
+```
+
+
+## Problem 2.2
+
+### (a)
+
+```{r coordinate_descent_func}
+coordinate_descent <- function(lambda, y, X){
+  # constants
+  n <- nrow(X)
+  p <- ncol(X)
+  # scaling constants
+  ## mean values
+  y_center <- mean(y)
+  X_center <- colMeans(X)
+  ## standard deviations
+  y_scale <- sd(y)
+  X_scale <- apply(X, 2, sd)
+  # scaling y and X
+  X <- scale(X)
+  y <- scale(y)
+  # recalculate mean values
+  y_bar <- mean(y)
+  X_bar <- colMeans(X)
+  # speedup suggested by 2.20
+  yX <- crossprod(y, X)
+  oneX <- colSums(X)
+  XX <- crossprod(X)
+  # speedup for gamma calculation
+  X_square_norm <- diag(XX)
+  gamma <- n * lambda / X_square_norm
+  # remainder of 2.20
+  diag(XX) <- 0
+  # initial arbitrary guess for betas
+  updated_betas <- betas <- rep(0, times = (p + 1))
+  tol <- 1e-10
+  while(TRUE){
+    # update beta 0 from 2.19
+    updated_betas[1] <- y_bar + t(updated_betas[-1]) %*% X_bar
+    for(i in 1:p){
+      # from 2.17
+      zx <- yX[i] - updated_betas[1] * oneX[i] -t(updated_betas[-1]) %*% XX[,i]
+      beta_hat <- zx / X_square_norm[i]
+      # from 2.18
+      updated_betas[i+1] <- sign(beta_hat) * max(c(0, abs(beta_hat) - gamma[i]))
+    }
+    # checking convergence based on threshold
+    if(max(abs(updated_betas - betas)) < tol){
+      break
+    }
+    # save the updated values to betas prior to construction
+    betas <- updated_betas
+  }
+  # back to unscaled coefficients:
+  betas[-1] <- betas[-1] * y_scale / X_scale
+  betas[1] <- betas[1] * y_scale + y_center - sum(betas[-1] * X_center)
+  return(betas)
+}
+```
+
+```{r LASSO_solution_path_func}
+LASSO <- function(lambdas, y, X){
+  map_dfr(lambdas, ~set_names(c(., coordinate_descent(., y, X)), 
+                              c("Lambda" ,"(Intercept)", 
+                                paste0("X", seq_along(X)))))
+}
+```
+
+### (b)
+
+We may generate the data based on the given formula:
+
+$$
+y = 3x_1 - 17x_2 + 5x_3 + \epsilon, \
+\epsilon \sim N(0, 1)
+$$
+
+```{r 2_2_b_data_generator, message=FALSE}
+# setting random seed
+set.seed(5581)
+# basic dimensions of data
+n <- 1000
+p <- 3
+# producing X data
+mus <- runif(p)
+sigmas <- runif(p)
+X <- map2_dfc(mus, sigmas, ~ rnorm(n, .x, .y))
+colnames(X) <- map_chr(1:p, ~paste0("X", .))
+# producing error
+epsilon <- rnorm(n)
+# producing y data
+coeffs <- c(3, -17, 5)
+y <- as.matrix(X) %*% coeffs + epsilon
+```
+
+The generated data is shown below:
+
+```{r 2_2_b_generated_data}
+cbind(y, X)
+```
+
+Now from the coded function in `2.2 (a)`, we may compute the LASSO solution path
+for 100 $\lambda$ values. We may do the same using the `glmnet` package in `R`.
+
+```{r 2_2_b_fitting}
+lambdas <- 10^seq(-3, 5, length.out = 100)
+glm_fit <- glmnet(as.matrix(X), y, lambda = lambdas, standardize = TRUE, 
+                  alpha = 1) #alpha is set to 1 in order to be a LASSO
+LASSO_fit <- LASSO(lambdas, y, X)
+```
+
+Below are the results from the `glmnet` package:
+
+```{r 2_2_b_glmnet}
+as.matrix(coef(glm_fit)) %>% 
+  t(.) %>% 
+  cbind(., "Lambda" = glm_fit$lambda) %>% 
+  as_tibble(.) %>% 
+  select(5, 1:4) %>%
+  arrange(Lambda)
+```
+
+Below are the results from the function in `2.2 (a)`:
+
+```{r 2_2_b_coordinate_descent}
+LASSO_fit %>% 
+  arrange(Lambda)
+```
+
+
+
+
+
+
+
