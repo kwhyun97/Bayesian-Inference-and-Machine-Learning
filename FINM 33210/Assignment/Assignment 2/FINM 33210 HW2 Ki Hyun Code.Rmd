@@ -32,12 +32,9 @@ coordinate_descent <- function(lambda, y, X){
   # scaling y and X
   X <- scale(X)
   y <- scale(y)
-  # recalculate mean values
-  y_bar <- mean(y)
-  X_bar <- colMeans(X)
   # speedup suggested by 2.20
   yX <- crossprod(y, X)
-  oneX <- colSums(X)
+  oneX <- rep(0, times = p) # since X is scaled
   XX <- crossprod(X)
   # speedup for gamma calculation
   X_square_norm <- diag(XX)
@@ -46,10 +43,11 @@ coordinate_descent <- function(lambda, y, X){
   diag(XX) <- 0
   # initial arbitrary guess for betas
   updated_betas <- betas <- rep(0, times = (p + 1))
+  # from 2.19
+  updated_betas[1] <- 0.0 # with scaled data, beta 0 is constantly 0
+  # tolerance to define "not meaningful change"
   tol <- 1e-10
   while(TRUE){
-    # update beta 0 from 2.19
-    updated_betas[1] <- y_bar + t(updated_betas[-1]) %*% X_bar
     for(i in 1:p){
       # from 2.17
       zx <- yX[i] - updated_betas[1] * oneX[i] -t(updated_betas[-1]) %*% XX[,i]
@@ -65,8 +63,9 @@ coordinate_descent <- function(lambda, y, X){
     betas <- updated_betas
   }
   # back to unscaled coefficients:
-  betas[-1] <- betas[-1] * y_scale / X_scale
-  betas[1] <- betas[1] * y_scale + y_center - sum(betas[-1] * X_center)
+  betas[-1] <- updated_betas[-1] * y_scale / X_scale
+  # from 2.19
+  betas[1] <- y_center - X_center %*% betas[-1]
   return(betas)
 }
 ```
@@ -88,17 +87,19 @@ y = 3x_1 - 17x_2 + 5x_3 + \epsilon, \
 \epsilon \sim N(0, 1)
 $$
 
+For the $X_1$, $X_2$, and $X_3$, I will use `Sepal Length`, `Sepal Width`, and
+`Petal Length` (respectively) from the `iris` data-set.
+
 ```{r 2_2_b_data_generator, message=FALSE}
+# generating X data
+data("iris")
+X <- iris[1:3]
+# basic dimensions of data
+n <- nrow(X)
+p <- ncol(X)
+colnames(X) <- map_chr(1:p, ~paste0("X", .))
 # setting random seed
 set.seed(5581)
-# basic dimensions of data
-n <- 1000
-p <- 3
-# producing X data
-mus <- runif(p)
-sigmas <- runif(p)
-X <- map2_dfc(mus, sigmas, ~ rnorm(n, .x, .y))
-colnames(X) <- map_chr(1:p, ~paste0("X", .))
 # producing error
 epsilon <- rnorm(n)
 # producing y data
@@ -140,9 +141,108 @@ LASSO_fit %>%
   arrange(Lambda)
 ```
 
+Though not precisely the same at the $10^{-10}$ threshold level, the two methods
+yield a similar result.
 
+## Problem 2.3
 
+### (a)
 
+As a Financial Mathematics student, I felt the urge to set the true $\beta$ 
+values according to the Fibonacci sequence. Since the 50th Fibonacci number
+is too huge, I will repeat each Fibonacci number (starting from the third) 
+10 times
+
+$$
+\beta_1 = 1 \\
+\vdots \\
+\beta_{10} = 1 \\
+\beta_{11} = 2 \\
+\vdots \\
+\beta_{20} = 2 \\
+\vdots \\
+\beta_{41} = 8 \\
+\vdots \\
+\beta_{50} = 8
+$$
+
+Therefore, the linear model, for $i$th observation, would be in the form:
+
+$$
+\begin{aligned}
+y_i =& x_{1, i} + \cdots + x_{10, i} \\
++& 2 x_{11, i} + \cdots + 2 x_{20, i} \\
++& 3 x_{21, i} + \cdots + 3 x_{30, i} \\
++& 5 x_{31, i} + \cdots + 5 x_{40, i} \\
++& 8 x_{41, i} + \cdots + 8 x_{50, i} \\
++& \epsilon_i
+\end{aligned}
+$$
+
+Here, 
+
+$$
+\epsilon_i \stackrel{\mathrm{iid}}{\sim} \mathcal{N}(0,\sigma^2)
+$$
+
+For simplicity reasons, I will set $\sigma = 1$.
+
+### (b)
+
+Continuing on from the values set in `(a)`, I will generate $\mathbf{X}$ values
+using data-sets provided by `R`.
+
+Each of $x_i$ will be derived from the Normal distribution with the mean set as
+one of the 5 `float` variables in the `mtcars` data-set (i.e., `Miles/Gallon`,
+`Displacement(cu.in.)`, `Rear Axle Ratio`, `Weight(1000 lbs)`, 
+`Quarter-Mile Time (sec)`). The variance of the normal distribution will be 
+determined by the square of the `Petal Width` observations in the `iris` 
+data-set.
+
+To be precise: 
+
+$x_1, \cdots, x_{10}$ will be derived from 
+$N(mpg_1, pw_1), \cdots N(mpg_{10}, pw_{10})$,
+
+$x_{11}, \cdots, x_{20}$ will be derived from 
+$N(disp_1, pw_{11}), \cdots N(disp_{10}, pw_{20})$,
+
+$x_{21}, \cdots, x_{30}$ will be derived from 
+$N(drat_1, pw_{21}), \cdots N(drat_{10}, pw_{30})$,
+
+$x_{31}, \cdots, x_{40}$ will be derived from 
+$N(wt_1, pw_{31}), \cdots N(wt_{10}, pw_{40})$,
+
+$x_{41}, \cdots, x_{50}$ will be derived from 
+$N(qsec_1, pw_{41}), \cdots N(qsec_{10}, pw_{50})$
+
+```{r 2_3_b_hyper_params}
+data("mtcars")
+mus <- c(mtcars$mpg[1:10], mtcars$disp[1:10], mtcars$drat[1:10], 
+         mtcars$wt[1:10], mtcars$qsec[1:10])
+sigmas <- iris$Petal.Width[1:50]
+```
+
+```{r 2_3_b_generate_data, message=FALSE}
+set.seed(1212)
+sets <- 100
+n <- 50
+betas <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(5, 10), rep(8, 10))
+X <- map2_dfc(mus, sigmas, ~rnorm(sets*n, mean = .x, sd = .y))
+colnames(X) <- paste0("X", seq_along(X))
+epsilon <- rnorm(sets * n)
+y <- as.matrix(X) %*% betas + epsilon
+```
+
+Independence condition is already met from generating the data.
+I will simply split the generated 5000 observations into 100 training sets, 
+each of size 50.
+
+```{r 2_3_b_training_sets}
+data <- cbind(y, X)
+# Split the observations into 100 training sets of size 50 each
+train_sets <- split(data, rep(1:100, each = 50))
+```
 
 
 
