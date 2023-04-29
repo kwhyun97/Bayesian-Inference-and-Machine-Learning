@@ -1,15 +1,18 @@
 ---
 title: "Homework 2"
-subtitle: "FINM 33210: Bayesian Statistical Inference and Machine Learning"
 author: "Ki Hyun"
-date: "Due: 23:59 (CT) April 29th 2023"
-output: html_notebook
+date: 'Due: 23:59 (CT) April 29th 2023'
+output:
+  html_notebook: default
+  pdf_document: default
+subtitle: 'FINM 33210: Bayesian Statistical Inference and Machine Learning'
 ---
 
-```{r packages, message=FALSE}
+```{r packages, message=FALSE, warning=FALSE}
 library(dplyr)
 library(purrr)
 library(glmnet)
+library(ggplot2)
 ```
 
 
@@ -196,53 +199,213 @@ Each of $x_i$ will be derived from the Normal distribution with the mean set as
 one of the 5 `float` variables in the `mtcars` data-set (i.e., `Miles/Gallon`,
 `Displacement(cu.in.)`, `Rear Axle Ratio`, `Weight(1000 lbs)`, 
 `Quarter-Mile Time (sec)`). The variance of the normal distribution will be 
-determined by the square of the `Petal Width` observations in the `iris` 
-data-set.
+determined by the square of the hundred-fold `Petal Width` observations in the 
+`iris` data-set.
 
 To be precise: 
 
 $x_1, \cdots, x_{10}$ will be derived from 
-$N(mpg_1, pw_1), \cdots N(mpg_{10}, pw_{10})$,
+$N(mpg_1, (100pw_1)^2), \cdots N(mpg_{10}, (100pw_{10})^2)$,
 
 $x_{11}, \cdots, x_{20}$ will be derived from 
-$N(disp_1, pw_{11}), \cdots N(disp_{10}, pw_{20})$,
+$N(disp_1, (100pw_{11})^2), \cdots N(disp_{10}, (100pw_{20})^2)$,
 
 $x_{21}, \cdots, x_{30}$ will be derived from 
-$N(drat_1, pw_{21}), \cdots N(drat_{10}, pw_{30})$,
+$N(drat_1, (100pw_{21})^2), \cdots N(drat_{10}, (100pw_{30})^2)$,
 
 $x_{31}, \cdots, x_{40}$ will be derived from 
-$N(wt_1, pw_{31}), \cdots N(wt_{10}, pw_{40})$,
+$N(wt_1, (100pw_{31})^2), \cdots N(wt_{10}, (100pw_{40})^2)$,
 
 $x_{41}, \cdots, x_{50}$ will be derived from 
-$N(qsec_1, pw_{41}), \cdots N(qsec_{10}, pw_{50})$
+$N(qsec_1, (100pw_{41})^2), \cdots N(qsec_{10}, (100pw_{50})^2)$
 
 ```{r 2_3_b_hyper_params}
 data("mtcars")
 mus <- c(mtcars$mpg[1:10], mtcars$disp[1:10], mtcars$drat[1:10], 
          mtcars$wt[1:10], mtcars$qsec[1:10])
-sigmas <- iris$Petal.Width[1:50]
+sigmas <- iris$Petal.Width[1:50] * 100
 ```
 
 ```{r 2_3_b_generate_data, message=FALSE}
-set.seed(1212)
+set.seed(121)
 sets <- 100
 n <- 50
-betas <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(5, 10), rep(8, 10))
+betas <- rep(c(1, 2, 3, 5, 8), each = 10)
 X <- map2_dfc(mus, sigmas, ~rnorm(sets*n, mean = .x, sd = .y))
 colnames(X) <- paste0("X", seq_along(X))
 epsilon <- rnorm(sets * n)
 y <- as.matrix(X) %*% betas + epsilon
 ```
 
-Independence condition is already met from generating the data.
-I will simply split the generated 5000 observations into 100 training sets, 
+Independence condition is already met from generating the data. Nevertheless,
+I will shuffle and split the generated 5000 observations into 100 training sets, 
 each of size 50.
 
 ```{r 2_3_b_training_sets}
 data <- cbind(y, X)
+# shuffle the data
+set.seed(5881)
+shuffled_data <- data[sample(1:nrow(data)),]
 # Split the observations into 100 training sets of size 50 each
-train_sets <- split(data, rep(1:100, each = 50))
+train_sets <- split(shuffled_data, rep(1:100, each = 50))
 ```
 
+### (c)
 
+We will choose the lambdas similar to `Problem 2.2`
 
+```{r 2_3_lambda}
+lambdas <- 10^seq(-3, 5, length.out = 10000)
+```
+
+The mean squared error value for each of 1,000,000 models will be computed.
+
+```{r 2_3_c}
+Lasso_lms <- map(train_sets,
+                 ~glmnet(.[-1], .[[1]], lambda = lambdas, standardize = TRUE,
+                         #alpha is set to 1 in order to be a LASSO
+                         alpha = 1))
+
+errors <- map2_df(train_sets, Lasso_lms,
+                  ~apply(predict(.y, newx = as.matrix(.x[-1])) - .x[[1]],
+                         2, function (x) mean(x^2))) %>% 
+  t(.)
+
+colnames(errors) <- paste0("Training set", 1:ncol(errors))
+
+errors <- as_tibble(errors)
+
+mses <- apply(errors, 1, mean)
+
+complexity <- map_df(Lasso_lms, ~.$df)
+```
+
+We may also compute the mean squared error across 100 models with the same
+$\lambda$ values (i.e., models that only vary training sets). Doing so, we are
+able to create the blue curve below:
+
+```{r 2_3_c_graph}
+blue_curve <- ggplot()
+
+for(i in 1:sets){
+  blue_curve <- blue_curve +
+    geom_line(mapping = aes(x = df, y = error),
+              data = tibble(df = complexity[[i]], error = errors[[i]]),
+              color = "skyblue", alpha = 0.3)
+}
+
+blue_curve  + 
+  geom_line(mapping = aes(x = df, y = error),
+            data = tibble(df = rowMeans(complexity), error = mses),
+            color = "blue") +
+  labs(x = "Model Complexity (df)", y = "Prediction Error (MSE)",
+       title = "In-sample Error across varying Model Complexity",
+       subtitle = "100 datasets x 10,000 lambdas",
+       caption = paste0("* The bold blue line represents the average across ",
+                    "100 different datasets")) +
+  theme_bw()
+```
+
+The error for large lambda / small degrees of freedom are quite huge to to the
+monotonicity of the true linear model and the scale of the regressors.
+
+### (d)
+
+Let's first generate a large out-of-sample pairs.
+
+I will create the out-of-sample $\mathbf{X}'$ values by first ordering the 
+original $\mathbf{X}$ so that for each column the smaller values go at the top.
+
+Moreover, I will take the average of adjacent rows for each column so that I 
+have 4,999 new observations for all 50 variables. 
+
+Additionally, I will add a last row that takes 2 times the average deducted by 
+the original largest value to match 5,000 observations.
+
+Lastly, I will reorder each of the columns to the original random order of 
+$\mathbf{X}$ to finalize our out-of-sample independent variables data.
+
+```{r 2_3_d_X_prime}
+# sorting the original data
+X_prime = apply(X, 2, sort)
+# saving the last row
+last_row <- X_prime[nrow(X_prime),]
+# get the average of two adjacent rows
+X_prime <- (X_prime[1:(nrow(X_prime) - 1),] + X_prime[2:nrow(X_prime),])/2
+# compute the last row
+last_row <- 2*X_prime[nrow(X_prime),] - last_row
+X_prime <- rbind(X_prime, last_row)
+# reordering back to original data
+original_order <- apply(X, 2, order)
+for(col in 1:ncol(X)){
+  X_prime[,col] <- X_prime[original_order[,col], col]
+}
+```
+
+Now with the new $\mathbf{X}'$, we can generate the new $\mathbf{y}'$ as well
+using the "true" coefficients and newly sampled errors under a new random seed.
+
+```{r 2_3_d_y}
+set.seed(81)
+epsilon_prime <- rnorm(sets * n)
+y_prime <- X_prime %*% betas + epsilon_prime
+```
+
+Now for each of the 1,000,000 models, the out of sample error can be computed
+and the variance of the error across 5000 prediction can also be computed
+
+```{r oos_error}
+errors_variance <- map_df(Lasso_lms,
+                          ~ apply((predict(., newx = as.matrix(X_prime)) -
+                                    as.vector(y_prime)), 
+                                  MARGIN = 2, FUN = var)) %>% 
+  t(.)
+
+colnames(errors_variance) <- paste0("Training set", 1:ncol(errors_variance))
+
+errors_variance <- as_tibble(errors_variance)
+```
+
+A preview of the error variance for 5 lambdas and 5 training datasets can be
+seen below
+
+```{r matrix_preview}
+errors_variance[1:5, 1:5]
+```
+
+Now if we average across the 100-training-set models for the same $\lambda$
+the top 10 average prediction error variance can be shown as
+
+```{r error_variance_per_lambda}
+tibble(Lambdas = Lasso_lms[[1]]$lambda,
+       "Error Variance" = rowMeans(errors_variance)) %>% 
+  arrange("Error Varaince") %>% 
+  head(10)
+```
+
+If we create a similar visualization to that of (c) it becomes:
+
+```{r error_variance_graph}
+log_lamdas <- log(Lasso_lms[[1]]$lambda)
+red_curve <- ggplot()
+
+for(i in 1:sets){
+  red_curve <- red_curve +
+    geom_line(mapping = aes(x = log_lambda, y = var),
+              data = tibble(log_lambda = log_lamdas, 
+                            var = errors_variance[[i]]),
+              color = "pink", alpha = 0.3)
+}
+
+red_curve  + 
+  geom_line(mapping = aes(x = log_lambda, y = var),
+            data = tibble(log_lambda = log_lamdas,
+                          var = rowMeans(errors_variance)),
+            color = "red") +
+  labs(x = "Log-Lambda", y = "Variance of Error",
+       title = "Variance of Error across varying Model Complexity",
+       subtitle = "100 datasets x 10,000 lambdas",
+       caption = paste0("* The bold red line represents the average across ",
+                    "100 different datasets")) +
+  theme_bw()
+```
