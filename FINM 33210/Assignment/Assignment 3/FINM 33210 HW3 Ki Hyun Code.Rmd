@@ -1,0 +1,325 @@
+---
+title: "Homework 3"
+subtitle: 'FINM 33210: Bayesian Statistical Inference and Machine Learning'
+author: "Ki Hyun"
+date: 'Due: 23:59 (CT) May 19th 2023'
+output: pdf_document
+---
+
+```{r packages, include=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+
+# Problem 0.1
+
+## (a)
+
+$$
+\begin{aligned}
+\mathbf{E}[\mathbf{h}' \mathbf{r}] &=
+\mathbf{E}[\sum_{i = 1}^n h_i r_i] \\
+&= \sum_{i = 1}^n \mathbf{E}[h_i r_i] \\
+&= \frac{1}{n} \sum_{i = 1}^n \mathbf{E}[r_i] \\
+&(\because \mathbf{h} = (1/n, 1/n, \cdots, 1/n)) \\
+&= \frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\beta r_M + \epsilon_i] \\
+&= \frac{1}{n} \sum_{i = 1}^n \left( \mathbf{E}[\beta r_M] + 
+\mathbf{E}[\epsilon_i] \right) \\
+&= \frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\beta r_M] +
+\frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i] \\
+&= \frac{\beta}{n} \sum_{i = 1}^n \mathbf{E}[r_M] +
+\frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i] \\
+&= \frac{\beta}{n} n \mathbf{E}[r_M]  +
+\frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i]\\
+&= \beta \mathbf{E}[r_M] +
+\frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i]
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\mathbf{V}[\mathbf{h}' \mathbf{r}] &=
+\mathbf{V}[\sum_{i = 1}^n h_i r_i] \\
+&= \mathbf{V}[\frac{1}{n} \sum_{i = 1}^n r_i] \\
+&(\because \mathbf{h} = (1/n, 1/n, \cdots, 1/n)) \\
+&= \frac{1}{n^2} \mathbf{V}[\sum_{i = 1}^n r_i] \\
+&= \frac{1}{n^2} \mathbf{V}[\sum_{i = 1}^n (\beta r_M + \epsilon_i)] \\
+&= \frac{1}{n^2} \mathbf{V}[n \beta r_M + \sum_{i = 1}^n \epsilon_i] \\
+&= \frac{1}{n^2} \left( \mathbf{V}[n \beta r_M] + 
+\sum_{i = 1}^n \mathbf{V}[\epsilon_i] + 
+\sum_{i = 1}^n 2Cov(n \beta r_M, \epsilon_i) +
+\sum_{i \neq j} 2Cov(\epsilon_i, \epsilon_j)
+\right) \\
+&= \frac{1}{n^2} \left( (n \beta)^2 \mathbf{V}[r_M] + 
+\sum_{i = 1}^n \mathbf{V}[\epsilon_i] + 
+\sum_{i = 1}^n 2n \beta Cov(r_M, \epsilon_i) +
+\sum_{i \neq j} 2Cov(\epsilon_i, \epsilon_j)
+\right) \\
+&= \frac{1}{n^2} \left( (n \beta)^2 \mathbf{V}[r_M] + 
+\sum_{i = 1}^n \mathbf{V}[\epsilon_i] + 
+2 \sum_{i \neq j} Cov(\epsilon_i, \epsilon_j)
+\right) \\
+&(\because \epsilon_i \perp \!\!\! \perp r_M) \\
+&= \frac{1}{n^2} \left( (n \beta)^2 \mathbf{V}[r_M] + 
+\sum_{i = 1}^n \mathbf{V}[\epsilon_i] \right) \\
+&(\because \text{ for } i \neq j, \ \epsilon_i \perp \!\!\! \perp \epsilon_j) \\
+&= \beta^2 \mathbf{V}[r_M] + 
+\frac{1}{n^2} \sum_{i = 1}^n \mathbf{V}[\epsilon_i] \\
+&= \beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i
+\end{aligned}
+$$
+
+Therefore, the functions $f()$ and $g()$ can be explicitly defined as:
+
+$$
+f(\beta, \sigma^2_M) := \beta^2 \sigma^2_M
+$$
+
+and
+
+$$
+g(\sigma^2_1, \cdots, \sigma^2_n) := \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i
+$$
+
+\newpage
+
+## (b)
+
+It was given that $\beta = 0.5$, $\sigma_M = 0.2$, and $\sigma_i \approx 0.03$.
+
+Using the definition in (a) for $f()$ and $g()$,
+
+$$
+\frac{f}{f + g} = \frac{\beta^2 \sigma^2_M}{\beta^2 \sigma^2_M + 
+\frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}
+$$
+
+Now substituting the values  $\beta = 0.5$, $\sigma_M = 0.2$, and 
+$\sigma_i \approx 0.03$.
+
+$$
+\frac{f}{f + g} (n) \approx \frac{0.5^2 \cdot 0.2^2}{
+0.5^2 \cdot 0.2^2 + \frac{1}{n^2} n \cdot 0.03^2}
+= \frac{0.01}{0.01 + \frac{0.0009}{n}}
+= \frac{1}{1 + \frac{0.09}{n}}
+$$
+
+If we numerically compute and plot $f/(f + g)$ as a function of $n$ for 
+$n = 2, \dots, 30$:
+
+```{r q1b_plot, echo=FALSE}
+f_over_fg <- function(n){
+  1/(1 + 0.09/n)
+}
+n <- seq(2, 30, by = 1)
+
+tibble(ffg = f_over_fg(n), n = n) %>% 
+  ggplot(mapping = aes(x = n, y = ffg)) + 
+  geom_point() + 
+  geom_line() +
+  ylim(c(0.95, 1)) +
+  labs(x = "n", y = "f/(f + g)",
+       title = "Fraction of Variance Explained by the Market") +
+  theme_bw(base_size = 12)
+```
+
+\newpage
+
+## (c)
+
+We know from (a) that
+
+$$
+\mathbf{E}[\mathbf{h}' \mathbf{r}] = \beta \mathbf{E}[r_M] +
+\frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i]
+$$
+
+Therefore,
+
+$$
+\begin{aligned}
+\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01] &=
+\mathbf{E}[\mathbf{h}' \mathbf{r}] - \mathbf{E}[0.01] \\
+&= \beta \mathbf{E}[r_M] + \frac{1}{n} \sum_{i = 1}^n \mathbf{E}[\epsilon_i]
+- 0.01 \\
+&= \beta \cdot 0.07 + \frac{1}{n} \sum_{i = 1}^n 1.5 \cdot \sigma_i - 0.01 \\
+&= 0.07 \beta + \frac{1.5}{n} \sum_{i = 1}^n \sigma_i - 0.01
+\end{aligned}
+$$
+
+Moreover, we also know from (a) that
+
+$$
+\mathbf{V}[\mathbf{h}' \mathbf{r}] = \beta^2 \sigma^2_M + 
+\frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i
+$$
+
+Now using the assumptions of (b)
+
+$$
+\begin{aligned}
+\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
+{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
+\frac{0.07 \beta + \frac{1.5}{n} \sum_{i = 1}^n \sigma_i - 0.01}
+{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
+& \approx \frac{0.07 \cdot 0.5 + \frac{1.5}{n} \sum_{i = 1}^n 0.03 - 0.01}
+{\sqrt{0.5^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.03^2}} \\
+&= \frac{0.07 \cdot 0.5 + 1.5 \cdot 0.03 - 0.01}
+{\sqrt{0.5^2 \cdot 0.2^2 + \frac{0.03^2}{n}}} \\
+&= \frac{0.35 + 0.45 - 0.1}{\sqrt{1 + \frac{0.09}{n}}} \\
+&= \frac{0.7}{\sqrt{1 + \frac{0.09}{n}}}
+\end{aligned}
+$$
+
+If we numerically compute and plot the Sharpe ratio as a function of $n$ for 
+$n = 2, \dots, 30$:
+
+```{r q1c_plot_1, echo=FALSE}
+sharpe1 <- function(n){
+  0.7/sqrt(1 + 0.09/n)
+}
+
+tibble(sharpe.r = sharpe1(n), n = n) %>% 
+  ggplot(mapping = aes(x = n, y = sharpe.r)) +
+  geom_point() + 
+  geom_line() +
+  ylim(c(0.68, 0.7))+
+  labs(x = "n", y = "Sharpe Ratio",
+       title = "Sharpe Ratio of the fund-of-funds across n") +
+  theme_bw(base_size = 12)
+```
+
+If the Sharpe ratio of $\epsilon_i$ is $2.0$,
+
+$$
+\begin{aligned}
+\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
+{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
+\frac{0.07 \beta + \frac{2.0}{n} \sum_{i = 1}^n \sigma_i - 0.01}
+{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
+& \approx \frac{0.07 \cdot 0.5 + \frac{2.0}{n} \sum_{i = 1}^n 0.03 - 0.01}
+{\sqrt{0.5^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.03^2}} \\
+&= \frac{0.07 \cdot 0.5 + 2.0 \cdot 0.03 - 0.01}
+{\sqrt{0.5^2 \cdot 0.2^2 + \frac{0.03^2}{n}}} \\
+&= \frac{0.35 + 0.6 - 0.1}{\sqrt{1 + \frac{0.09}{n}}} \\
+&= \frac{0.85}{\sqrt{1 + \frac{0.09}{n}}}
+\end{aligned}
+$$
+
+\newpage
+
+Moreover, if we plot the two different $\epsilon_i$-Sharpe-ratio together:
+
+```{r q1c_plot_2, echo=FALSE}
+sharpe2 <- function(n){
+  0.85/sqrt(1 + 0.09/n)
+}
+
+tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe2(n), n = n) %>%
+  ggplot() + 
+  geom_point(mapping = aes(x = n, y = sharpe.r1, color = "1.5")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r1, color = "1.5")) +
+  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "2.0")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "2.0")) +
+  scale_color_manual(values = c("1.5" = "blue", "2.0" = "red")) +
+  labs(x = "n", y = "Sharpe Ratio", color = "Sharpe Ratio of Individual Fund",
+       title = "Sharpe Ratio of the fund-of-funds") +
+  theme_bw(base_size = 12)
+```
+
+The general trend in how the Sharpe Ratio changes as $n$ changes is similar in
+both cases. However, all the Sharpe Ratios for each $n$ is larger for 2.0 
+$\epsilon_i$-Sharpe-ratio case, when compared to 1.5 $\epsilon_i$-Sharpe-ratio 
+case. To be precise, the former's Sharpe Ratio is scaled to $\frac{0.85}{0.7}$
+of the latter.
+
+\newpage
+
+## (d)
+
+Using the same assumptions in (c), for the 1.5 $\epsilon_i$-Sharpe-ratio case,
+the new Sharpe Ratio of the fund of funds becomes:
+
+$$
+\begin{aligned}
+\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
+{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
+\frac{0.07 \beta + \frac{1.5}{n} \sum_{i = 1}^n \sigma_i - 0.01}
+{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
+&= \frac{0.07 \cdot 0 + \frac{1.5}{n} \sum_{i = 1}^n 0.1 - 0.01}
+{\sqrt{0^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.1^2}} \\
+&= \frac{1.5 \cdot 0.1 - 0.01}{\sqrt{\frac{0.1^2}{n}}} \\
+&= \frac{0.14}{0.1} \sqrt{n} \\
+&= 1.4 \sqrt{n}
+\end{aligned}
+$$
+
+If we plot the (d)-case and (c)-case on the same graph:
+
+```{r q1d_plot_1, echo=FALSE}
+sharpe3 <- function(n){
+  1.4*sqrt(n)
+}
+
+tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe3(n), n = n) %>% 
+  ggplot() + 
+  geom_point(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) +
+  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) +
+  scale_color_manual(values = c("Case (c)" = "blue", "Case (d)" = "red")) +
+  labs(x = "n", y = "Sharpe Ratio", color = "Cases",
+       title = "Sharpe Ratio of the fund-of-funds",
+       subtitle = "Sharpe Ratio of Inidividual Funds = 1.5") +
+  theme_bw(base_size = 12)
+```
+
+Simply investing in a single fund case of (d) seems to be better in terms
+of Sharpe ratio when individual fund's Sharpe Ratio is $1.5$. The difference
+in Sharpe ratio between the two cases is greater for larger $n$ values.
+
+\newpage
+
+Now when individual fund's Sharpe Ratio is $2.0$:
+
+$$
+\begin{aligned}
+\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
+{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
+\frac{0.07 \beta + \frac{2.0}{n} \sum_{i = 1}^n \sigma_i - 0.01}
+{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
+&= \frac{0.07 \cdot 0 + \frac{2.0}{n} \sum_{i = 1}^n 0.1 - 0.01}
+{\sqrt{0^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.1^2}} \\
+&= \frac{2.0 \cdot 0.1 - 0.01}{\sqrt{\frac{0.1^2}{n}}} \\
+&= \frac{0.19}{0.1} \sqrt{n} \\
+&= 1.9 \sqrt{n}
+\end{aligned}
+$$
+
+Moreover,
+
+```{r q1d_plot_2, echo=FALSE}
+sharpe4 <- function(n){
+  1.9*sqrt(n)
+}
+
+tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe4(n), n = n) %>% 
+  ggplot() + 
+  geom_point(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) +
+  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) +
+  scale_color_manual(values = c("Case (c)" = "blue", "Case (d)" = "red")) +
+  labs(x = "n", y = "Sharpe Ratio", color = "Cases",
+       title = "Sharpe Ratio of the fund-of-funds",
+       subtitle = "Sharpe Ratio of Inidividual Funds = 2.0") +
+  theme_bw(base_size = 12)
+```
+
+Similarly, simply investing in a single fund case of (d) seems to be better in 
+terms of Sharpe ratio when individual fund's Sharpe Ratio is $2.0$ as well. The 
+difference in Sharpe ratio between the two cases is greater when individual 
+funds have $2.0$ Sharpe ratio than when individual funds have $1.5$ Sharpe 
+ratio. Within the above graph, the difference in Sharpe ratio between the two
+cases is greater for larger $n$ values.
