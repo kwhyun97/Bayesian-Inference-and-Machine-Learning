@@ -238,36 +238,60 @@ of the latter.
 
 ## (d)
 
-Using the same assumptions in (c), for the 1.5 $\epsilon_i$-Sharpe-ratio case,
-the new Sharpe Ratio of the fund of funds becomes:
+First of all, the expected return of a single fund in this setting is:
+
+$$
+\mathbf{E}[r_i] = \beta \mathbf{E}[r_M] + \mathbf{E}[\epsilon_i]
+$$
+
+Therefore, using the properties $\beta = 0$, $\sigma_i = 0.1$ and 
+$\mathbf{E}[\epsilon_i] = 1.5 \cdot \sigma_i$,
+
+$$
+\mathbf{E}[r_i - 0.01] = 0 \cdot \mathbf{E}[r_M] + 1.5 \cdot 0.1 - 0.01
+= 0.14
+$$
+
+Moreover, the variance of a single fund is:
 
 $$
 \begin{aligned}
-\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
-{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
-\frac{0.07 \beta + \frac{1.5}{n} \sum_{i = 1}^n \sigma_i - 0.01}
-{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
-&= \frac{0.07 \cdot 0 + \frac{1.5}{n} \sum_{i = 1}^n 0.1 - 0.01}
-{\sqrt{0^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.1^2}} \\
-&= \frac{1.5 \cdot 0.1 - 0.01}{\sqrt{\frac{0.1^2}{n}}} \\
-&= \frac{0.14}{0.1} \sqrt{n} \\
-&= 1.4 \sqrt{n}
+\mathbf{V}[r_i] &= \mathbf{V}[\beta r_M + \epsilon_i] \\
+&= \mathbf{V}[\beta r_M] + \mathbf{V}[\epsilon_i] + 
+2 Cov(\beta r_M, \epsilon_i) \\
+&= \beta^2 \mathbf{V}[r_M] + \sigma_i^2 +
+2 \beta Cov(r_M, \epsilon_i) \\
+&= \beta^2 \mathbf{V}[r_M] + \sigma_i^2 \\
+&(\because \epsilon_i \perp \!\!\! \perp r_M)
 \end{aligned}
 $$
+
+Similarly, using the given properties:
+
+$$
+\mathbf{V}[r_i] = 0^2 \cdot \mathbf{V}[r_M] + 0.1^2
+= 0.1^2
+$$
+
+Therefore, the Sharpe ratio of the fund becomes
+
+$$
+\frac{\mathbf{E}[r_i - 0.01]}{\sqrt{\mathbf{V}[r_i]}}
+= \frac{0.14}{\sqrt{0.1^2}} = 1.4
+$$
+
+\newpage
 
 If we plot the (d)-case and (c)-case on the same graph:
 
 ```{r q1d_plot_1, echo=FALSE}
-sharpe3 <- function(n){
-  1.4*sqrt(n)
-}
+sharpe3 <- 1.4
 
-tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe3(n), n = n) %>% 
+tibble(sharpe.r1 = sharpe1(n), n = n) %>% 
   ggplot() + 
   geom_point(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) + 
   geom_line(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) +
-  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) + 
-  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) +
+  geom_hline(yintercept = sharpe3, color = "red") +
   scale_color_manual(values = c("Case (c)" = "blue", "Case (d)" = "red")) +
   labs(x = "n", y = "Sharpe Ratio", color = "Cases",
        title = "Sharpe Ratio of the fund-of-funds",
@@ -275,51 +299,27 @@ tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe3(n), n = n) %>%
   theme_bw(base_size = 12)
 ```
 
-Simply investing in a single fund case of (d) seems to be better in terms
-of Sharpe ratio when individual fund's Sharpe Ratio is $1.5$. The difference
-in Sharpe ratio between the two cases is greater for larger $n$ values.
+The single fund seems to be much better in terms of Sharpe ratio than the 
+earlier scenarios. This would mostly be attributed to the fact that the single
+fund contains no market risk yet has an already high Sharpe ratio of $1.5$ by
+itself.
 
 \newpage
 
-Now when individual fund's Sharpe Ratio is $2.0$:
-
-$$
-\begin{aligned}
-\frac{\mathbf{E}[\mathbf{h}' \mathbf{r} - 0.01]}
-{\sqrt{\mathbf{V}[\mathbf{h}' \mathbf{r}]}} &=
-\frac{0.07 \beta + \frac{2.0}{n} \sum_{i = 1}^n \sigma_i - 0.01}
-{\sqrt{\beta^2 \sigma^2_M + \frac{1}{n^2} \sum_{i = 1}^n \sigma^2_i}} \\
-&= \frac{0.07 \cdot 0 + \frac{2.0}{n} \sum_{i = 1}^n 0.1 - 0.01}
-{\sqrt{0^2 \cdot 0.2^2 + \frac{1}{n^2} \sum_{i = 1}^n 0.1^2}} \\
-&= \frac{2.0 \cdot 0.1 - 0.01}{\sqrt{\frac{0.1^2}{n}}} \\
-&= \frac{0.19}{0.1} \sqrt{n} \\
-&= 1.9 \sqrt{n}
-\end{aligned}
-$$
-
-Moreover,
+The comparison for when the Sharpe ratio of $\epsilon_i$ is $2.0$ would yield
+a similar result with the Sharpe ratio of the fund being $1.9$
 
 ```{r q1d_plot_2, echo=FALSE}
-sharpe4 <- function(n){
-  1.9*sqrt(n)
-}
+sharpe4 <- 1.9
 
-tibble(sharpe.r1 = sharpe1(n), sharpe.r2 = sharpe4(n), n = n) %>% 
+tibble(sharpe.r2 = sharpe2(n), n = n) %>% 
   ggplot() + 
-  geom_point(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) + 
-  geom_line(mapping = aes(x = n, y = sharpe.r1, color = "Case (c)")) +
-  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) + 
-  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "Case (d)")) +
+  geom_point(mapping = aes(x = n, y = sharpe.r2, color = "Case (c)")) + 
+  geom_line(mapping = aes(x = n, y = sharpe.r2, color = "Case (c)")) +
+  geom_hline(yintercept = sharpe4, color = "red") +
   scale_color_manual(values = c("Case (c)" = "blue", "Case (d)" = "red")) +
   labs(x = "n", y = "Sharpe Ratio", color = "Cases",
        title = "Sharpe Ratio of the fund-of-funds",
        subtitle = "Sharpe Ratio of Inidividual Funds = 2.0") +
   theme_bw(base_size = 12)
 ```
-
-Similarly, simply investing in a single fund case of (d) seems to be better in 
-terms of Sharpe ratio when individual fund's Sharpe Ratio is $2.0$ as well. The 
-difference in Sharpe ratio between the two cases is greater when individual 
-funds have $2.0$ Sharpe ratio than when individual funds have $1.5$ Sharpe 
-ratio. Within the above graph, the difference in Sharpe ratio between the two
-cases is greater for larger $n$ values.
